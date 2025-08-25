@@ -76,19 +76,18 @@ const AddFirm = () => {
             setOffer("");
             setFile(null)
             alert("Firm added Successfully")
-             const mango = data.firmId;
-          const vendorRestuarant = data.vendorFirmName
-
-          localStorage.setItem('firmId', mango);
-          localStorage.setItem('firmName', vendorRestuarant)
-          window.location.reload();
           }else if(data.message === "vendor can have only one firm"){
               alert("Firm Exists 🥗. Only 1 firm can be added  ")
           } else{
               alert('Failed to add Firm')
           }
 
-              
+               const mango = data.firmId;
+          const vendorRestuarant = data.vendorFirmName
+
+          localStorage.setItem('firmId', mango);
+          localStorage.setItem('firmName', vendorRestuarant)
+          window.location.reload()
 
    } catch (error) {
       console.error("failed to add Firm")

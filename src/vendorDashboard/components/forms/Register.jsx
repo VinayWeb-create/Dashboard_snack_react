@@ -15,46 +15,36 @@ const Register = ({ showLoginHandler }) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    setLoading(true); // Set loading to true when the request starts
+    try {
+      const response = await fetch(`${API_URL}/vendor/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, email, password })
+      });
 
-  // Quick validation before sending the request — saves server calls and user pain
-  if (!username || !email || !password) {
-    alert("Bruh, fill all the fields before submitting!");
-    return;
-  }
-
-  setLoading(true);
-
-  console.log("Submitting:", { username, email, password }); // Debug what you send
-
-  try {
-    const response = await fetch(`${API_URL}/vendor/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }),
-    });
-
-    const data = await response.json();
-
-    console.log("Response status:", response.status, "Data:", data); // Debug server reply
-
-    if (response.ok) {
-      setUsername("");
-      setEmail("");
-      setPassword("");
-      alert("Vendor registered successfully 🎉");
-      showLoginHandler();
-    } else {
-      setError(data.error || "Unknown error occurred");
-      alert(`Registration Failed: ${data.error || "Contact Admin"}`);
+      const data = await response.json();
+      if (response.ok) {
+        console.log(data);
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        alert("Vendor registered successfully");
+        showLoginHandler();
+      } else {
+        setError(data.error);
+        alert("Registration Failed, Contact Admin")
+      }
+    } catch (error) {
+      console.error("Registration failed", error);
+      alert("Registration failed");
+    } finally {
+      setLoading(false); 
     }
-  } catch (error) {
-    console.error("Registration failed", error);
-    alert("Registration failed, try again later");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="registerSection">

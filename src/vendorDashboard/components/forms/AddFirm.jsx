@@ -61,12 +61,12 @@ const AddFirm = () => {
       });
 
       const response = await fetch(`${API_URL}/firm/add-firm`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${loginToken}`, // ✅ FIXED
-        },
-        body: formData,
-      });
+  method: "POST",
+  headers: {
+    token: loginToken, // 👈 instead of Authorization
+  },
+  body: formData,
+});
 
       const data = await response.json();
 

@@ -3,9 +3,9 @@ import { API_URL } from '../../data/apiPath';
 import { ThreeCircles } from 'react-loader-spinner';
 
 const Login = ({ showWelcomeHandler }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleShowPassword = () => setShowPassword(!showPassword);
@@ -15,52 +15,37 @@ const Login = ({ showWelcomeHandler }) => {
     setLoading(true);
 
     try {
-      // 1️⃣ Login Request
       const response = await fetch(`${API_URL}/vendor/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        alert(data.error || "Login failed");
-        return;
-      }
+      if (!response.ok) throw new Error(data.error || 'Login failed');
 
-      // 2️⃣ Store token & vendorId
+      // Login success
+      alert('Login success');
+      setEmail('');
+      setPassword('');
       localStorage.setItem('loginToken', data.token);
-      localStorage.setItem('vendorId', data.vendorId);
-
-      alert('Login successful!');
-      setEmail("");
-      setPassword("");
       showWelcomeHandler();
 
-      // 3️⃣ Fetch vendor info (requires token)
-      const vendorResponse = await fetch(`${API_URL}/vendor/single-vendor/${data.vendorId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'token': data.token
-        }
-      });
+      // Store vendor info
+      const vendor = data.vendor;
+      const firm = vendor.primaryFirm;
 
-      const vendorData = await vendorResponse.json();
-
-      if (vendorResponse.ok) {
-        const vendorFirmId = vendorData.vendorFirmId || '';
-        const vendorFirmName = vendorData.firm?.[0]?.firmName || '';
-        localStorage.setItem('firmId', vendorFirmId);
-        localStorage.setItem('firmName', vendorFirmName);
-        console.log("Vendor info stored:", vendorFirmId, vendorFirmName);
+      if (!firm) {
+        console.error('No firm assigned to this vendor');
       } else {
-        console.error("Failed to fetch vendor info:", vendorData.error);
+        localStorage.setItem('firmId', firm._id);
+        localStorage.setItem('firmName', firm.firmName);
       }
 
     } catch (error) {
-      console.error("Login error:", error);
-      alert("Login failed due to network or server error");
+      console.error('Login error:', error);
+      alert('Login failed');
     } finally {
       setLoading(false);
     }
@@ -80,35 +65,32 @@ const Login = ({ showWelcomeHandler }) => {
           <p>Logging in... Please wait</p>
         </div>
       )}
-
       {!loading && (
-        <form className='authForm' onSubmit={loginHandler} autoComplete='off'>
+        <form className="authForm" onSubmit={loginHandler} autoComplete="off">
           <h3>Vendor Login</h3>
-
           <label>Email</label>
           <input
             type="text"
-            name='email'
+            name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder='Enter your email'
-          /><br />
-
+            placeholder="Enter your email"
+          />
+          <br />
           <label>Password</label>
           <input
-            type={showPassword ? "text" : "password"}
-            name='password'
+            type={showPassword ? 'text' : 'password'}
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder='Enter your password'
-          /><br />
-
-          <span className='showPassword' onClick={handleShowPassword}>
+            placeholder="Enter your password"
+          />
+          <br />
+          <span className="showPassword" onClick={handleShowPassword}>
             {showPassword ? 'Hide' : 'Show'}
           </span>
-
           <div className="btnSubmit">
-            <button type='submit'>Submit</button>
+            <button type="submit">Submit</button>
           </div>
         </form>
       )}

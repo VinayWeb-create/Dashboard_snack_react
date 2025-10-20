@@ -1,6 +1,5 @@
-// Login.jsx (React Router redirect)
+// Login.jsx (reload after alert OK)
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { API_URL } from "../../data/apiPath";
 import { ThreeCircles } from "react-loader-spinner";
 
@@ -8,7 +7,6 @@ const Login = ({ showWelcomeHandler }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // ← import & create navigate
 
   const loginHandler = async (e) => {
     e.preventDefault();
@@ -25,7 +23,7 @@ const Login = ({ showWelcomeHandler }) => {
 
       if (!response.ok) throw new Error(data.error || "Login failed");
 
-      // Save auth data
+      // Save data first so reload keeps it
       localStorage.setItem("loginToken", data.token);
       localStorage.setItem("vendorId", data.vendorId);
 
@@ -38,10 +36,12 @@ const Login = ({ showWelcomeHandler }) => {
         localStorage.removeItem("firmName");
       }
 
-      // show success, then navigate without reload
-      alert("✅ Login successful");
       if (showWelcomeHandler) showWelcomeHandler();
-      navigate("/dashboard"); // <- use this only if you have a dashboard route
+
+      // Show alert, then reload when user clicks OK
+      alert("✅ Login successful");
+      // After OK clicked, reload the page
+      window.location.reload();
 
     } catch (error) {
       console.error("Login error:", error);

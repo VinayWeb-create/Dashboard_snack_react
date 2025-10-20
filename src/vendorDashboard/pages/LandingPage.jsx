@@ -7,6 +7,8 @@ import AddFirm from '../components/forms/AddFirm'
 import AddProduct from '../components/forms/AddProduct'
 import Welcome from '../components/Welcome'
 import AllProducts from '../components/AllProducts'
+import UserDetails from "../components/UserDetails";
+
 
 
 const LandingPage = () => {
@@ -18,6 +20,8 @@ const LandingPage = () => {
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [showLogOut, setShowLogOut] = useState(false)
   const [showFirmTitle, setShowFirmTitle] = useState(true)
+  const [showUserDetails, setShowUserDetails] = useState(false);
+
 
   useEffect(()=>{
     const loginToken = localStorage.getItem('loginToken');
@@ -118,6 +122,21 @@ const showAllProductsHandler = ()=>{
     setShowLogin(true)
  }
 }
+const showUserDetailsHandler = () => {
+  if (showLogOut) {
+    setShowRegister(false);
+    setShowLogin(false);
+    setShowFirm(false);
+    setShowProduct(false);
+    setShowWelcome(false);
+    setShowAllProducts(false);
+    setShowUserDetails(true);
+  } else {
+    alert("Please login first");
+    setShowLogin(true);
+  }
+};
+  
   return (
     <>
         <section className='landingSection'>
@@ -129,6 +148,7 @@ const showAllProductsHandler = ()=>{
             <SideBar showFirmHandler={showFirmHandler} showProductHandler ={showProductHandler}
             showAllProductsHandler = {showAllProductsHandler}
             showFirmTitle={showFirmTitle}
+            showUserDetailsHandler={showUserDetailsHandler}
             />
           {showFirm && showLogOut && <AddFirm />}
           {showProduct && showLogOut && <AddProduct />}
@@ -136,6 +156,8 @@ const showAllProductsHandler = ()=>{
           {showAllProducts && showLogOut && <AllProducts />}
           {showLogin && <Login showWelcomeHandler ={showWelcomeHandler}/>}
           {showRegister && <Register showLoginHandler = {showLoginHandler}/>}
+          {showUserDetails && showLogOut && <UserDetails />}
+
         
             </div>
         </section>

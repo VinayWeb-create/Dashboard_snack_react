@@ -11,45 +11,51 @@ const Login = ({ showWelcomeHandler }) => {
   const handleShowPassword = () => setShowPassword(!showPassword);
 
   const loginHandler = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const response = await fetch(`${API_URL}/vendor/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const response = await fetch(`${API_URL}/vendor/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || 'Login failed');
+    if (!response.ok) throw new Error(data.error || "Login failed");
 
-      // Login success
-      alert('Login success');
-      setEmail('');
-      setPassword('');
-      localStorage.setItem('loginToken', data.token);
-      showWelcomeHandler();
+    alert("Login successful");
 
-      // Store vendor info
-      const vendor = data.vendor;
-      const firm = vendor.primaryFirm;
+    // Clear input fields
+    setEmail("");
+    setPassword("");
 
-      if (!firm) {
-        console.error('No firm assigned to this vendor');
-      } else {
-        localStorage.setItem('firmId', firm._id);
-        localStorage.setItem('firmName', firm.firmName);
-      }
+    // Save token & vendor info
+    localStorage.setItem("loginToken", data.token);
+    localStorage.setItem("vendorId", data.vendorId);
 
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Login failed');
-    } finally {
-      setLoading(false);
+    // Save firm info safely
+    const firm = data.vendor.primaryFirm;
+    if (firm && firm._id) {
+      localStorage.setItem("firmId", firm._id);
+      localStorage.setItem("firmName", firm.firmName);
+    } else {
+      localStorage.removeItem("firmId");
+      localStorage.removeItem("firmName");
+      console.warn("Vendor has no firm assigned yet");
     }
-  };
+
+    showWelcomeHandler();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="loginSection">

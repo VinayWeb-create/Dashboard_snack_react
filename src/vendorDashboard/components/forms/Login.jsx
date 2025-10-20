@@ -46,7 +46,10 @@ const Login = ({ showWelcomeHandler }) => {
       console.warn("Vendor has no firm assigned yet");
     }
 
-    showWelcomeHandler();
+    // Instead of reloading, redirect user
+      navigate("/dashboard"); // <-- your dashboard route
+      if (showWelcomeHandler) showWelcomeHandler();
+
 
   } catch (error) {
     console.error(error);

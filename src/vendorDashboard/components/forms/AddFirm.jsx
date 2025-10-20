@@ -3,17 +3,17 @@ import { API_URL } from '../../data/apiPath';
 import { ThreeCircles } from 'react-loader-spinner';
 
 
-const AddProduct = () => {
-    const [productName, setProductName] = useState("");
-    const [price, setPrice] = useState("");
-    const [category, setCategory] = useState([]);
-    const [bestSeller, setBestSeller] = useState(false);
-    const [image, setImage] = useState(null);
-    const [description, setDescription] = useState("");
+const AddFirm = () => {
+  const [firmName, setFirmName] = useState("");
+  const [area, setArea] = useState("");
+  const [category, setCategory] = useState([]);
+  const [region, setRegion] = useState([]);
+  const [offer, setOffer] = useState("");
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false); 
 
 
-    const handleCategoryChange = (event)=>{
+  const handleCategoryChange = (event)=>{
       const value = event.target.value;
         if(category.includes(value)){
           setCategory(category.filter((item)=> item !== value));
@@ -21,65 +21,85 @@ const AddProduct = () => {
           setCategory([...category, value])
         }
   }
-
-  const handleBestSeller =(event)=>{
-    const value = event.target.value === 'true'
-      setBestSeller(value)
+  const handleRegionChange = (event)=>{
+      const value = event.target.value;
+        if(region.includes(value)){
+          setRegion(region.filter((item)=> item !== value));
+        }else{
+          setRegion([...region, value])
+        }
   }
+ 
   const handleImageUpload =(event)=>{
-    const selectedImage = event.target.files[0];
-    setImage(selectedImage)
-}
+      const selectedImage = event.target.files[0];
+      setFile(selectedImage)
+  }
 
-  const handleAddProduct = async(e)=>{
-      e.preventDefault()
+  const handleFirmSubmit= async(e)=>{
+        e.preventDefault();
     setLoading(true); 
 
-      try {
+   try {
         const loginToken = localStorage.getItem('loginToken');
-          const firmId = localStorage.getItem('firmId')
+        if(!loginToken){
+            console.error("User not authenticated");
+        }
 
-          if(!loginToken || !firmId){
-              console.error("user not authenticated")
-          }
-          
         const formData = new FormData();
-        formData.append('productName', productName);
-        formData.append('price', price);
-        formData.append('description', description);
-        formData.append('bestSeller', bestSeller)
-        formData.append('image', image)
+          formData.append('firmName', firmName);
+          formData.append('area', area);
+          formData.append('offer', offer);
+          formData.append('image', file)
 
-        category.forEach((value)=>{
-          formData.append('category', value)
-        });
-   
-          const response = await fetch(`${API_URL}/product/add-product/${firmId}`, {
-            method:'POST',
-            body: formData
+          category.forEach((value)=>{
+            formData.append('category', value)
+          });
+          region.forEach((value)=>{
+            formData.append('region', value)
           })
-            const data = await response.json()
 
-            if(response.ok){
-              alert('Product added succesfully')
-            }
-            setProductName("")
-            setPrice("");
-            setCategory([])
-            setBestSeller(false);
-            setImage(null);
-            setDescription("")
+          const response = await fetch(`${API_URL}/firm/add-firm`,{
+            method:'POST',
+            headers:{
+              'token': `${loginToken}`
+            },
+            body: formData
+          });
+          const data = await response.json()
+          if(response.ok){
+            console.log(data);
+            setFirmName("");
+            setArea("")
+            setCategory([]);
+            setRegion([]);
+            setOffer("");
+            setFile(null)
+            alert("Firm added Successfully")
+          }else if(data.message === "vendor can have only one firm"){
+              alert("Firm Exists 🥗. Only 1 firm can be added  ")
+          } else{
+              alert('Failed to add Firm')
+          }
 
-      } catch (error) {
-          alert('Failed to add Product')
-      }finally {
-        setLoading(false); 
-      }
+               const mango = data.firmId;
+          const vendorRestuarant = data.vendorFirmName
+
+          localStorage.setItem('firmId', mango);
+          localStorage.setItem('firmName', vendorRestuarant)
+          window.location.reload()
+
+   } catch (error) {
+      console.error("failed to add Firm")
+      alert("failed to add Firm")
+   } finally {
+    setLoading(false); 
+  }  
   }
 
-    return (
-    <div className="firmSection">
-{loading &&         <div className="loaderSection">
+
+  return (
+        <div className="firmSection">
+   {loading &&        <div className="loaderSection">
         <ThreeCircles
           visible={loading}
           height={100}
@@ -89,56 +109,71 @@ const AddProduct = () => {
           wrapperStyle={{}}
           wrapperClass=""
         />
-        <p>Please wait, your product is being added...</p>
       </div>}
-  {!loading && 
-    <form className="tableForm" onSubmit={handleAddProduct}>
-    <h3>Add Product</h3>
-        <label >Product Name</label>
-        <input type="text" value={productName} onChange={(e)=>setProductName(e.target.value)} />
-        <label >Price</label>
-        <input type="text" value={price} onChange={(e)=>setPrice(e.target.value)}/>
-        <div className="checkInp">
-     <label >Category</label>
-         <div className="inputsContainer">
-         <div className="checboxContainer">
-                 <label>Veg</label>
-                 <input type="checkbox" value="veg" checked ={category.includes('veg')}  onChange={handleCategoryChange}/>
-               </div>
-               <div className="checboxContainer">
-                 <label>Non-Veg</label>
-                 <input type="checkbox" value="non-veg" checked ={category.includes('non-veg')} onChange={handleCategoryChange} />
-               </div>
-         </div>
+         {!loading &&   <form className="tableForm" onSubmit={handleFirmSubmit}>
+            <h3>Add Firm</h3>
+                <label >Firm Name</label>
+                <input type="text" name='firmName' value={firmName} onChange={(e)=>setFirmName(e.target.value)}/>
+                <label >Area</label>
+                <input type="text"  name='area' value={area} onChange={(e)=>setArea(e.target.value)} />
+                {/* <label >Category</label>
+                <input type="text"  /> */}
+    <div className="checkInp">
+      <label >Category</label>
+          <div className="inputsContainer">
+          <div className="checboxContainer">
+                  <label>Veg</label>
+                  <input type="checkbox" checked ={category.includes('veg')}  value="veg" onChange={handleCategoryChange}/>
+                </div>
+                <div className="checboxContainer">
+                  <label>Non-Veg</label>
+                  <input type="checkbox" checked ={category.includes('non-veg')} value="non-veg" onChange={handleCategoryChange}/>
+                </div>
+          </div>
 
-   </div>
-   <div className="checkInp">
-     <label >Best Seller</label>
-         <div className="inputsContainer">
-         <div className="checboxContainer">
-                 <label>Yes</label>
-                 <input type="radio" value="true" checked = {bestSeller=== true} onChange={handleBestSeller}/>
-               </div>
-               <div className="checboxContainer">
-                 <label>No</label>
-                 <input type="radio" value="false" checked = {bestSeller=== false} onChange={handleBestSeller}/>
-               </div>
-         </div>
+    </div>
+    <label >Offer</label>
+                <input type="text" name='offer' value={offer} onChange={(e)=>setOffer(e.target.value)}/>
+    <div className="checkInp">
+      <label >Region</label>
+          <div className="inputsContainer">
+          <div className="regBoxContainer">
+                  <label>South Indian</label>
+                  <input type="checkbox" value="south-indian"   checked ={region.includes('south-indian')}
+                  onChange={handleRegionChange}
+                  />
+                </div>
+                <div className="regBoxContainer">
+                  <label>North-Indian</label>
+                  <input type="checkbox" value="north-indian"  checked ={region.includes('north-indian')}
+                  onChange={handleRegionChange}
+                  />
+                </div>
+                <div className="regBoxContainer">
+                  <label>Chinese</label>
+                  <input type="checkbox" value="chinese" checked ={region.includes('chinese')}
+                  onChange={handleRegionChange}
+                  />
+                </div>
+                <div className="regBoxContainer">
+                  <label>Bakery</label>
+                  <input type="checkbox" value="bakery" checked ={region.includes('bakery')}
+                  onChange={handleRegionChange}
+                  />
+                </div>
+          </div>
 
-   </div>
-       
-        <label >Description</label>
-        <input type="text" value={description} onChange={(e)=>setDescription(e.target.value)} />
-        <label >Firm Image</label>
-        <input type="file" onChange={handleImageUpload} />
-        <br />
-    <div className="btnSubmit">
-<button type='submit'>Submit</button>
-</div>
-   </form>
-  }
- </div>
+    </div>
+               
+                <label >Firm Image</label>
+                <input type="file" onChange={handleImageUpload} />
+                <br />
+            <div className="btnSubmit">
+        <button type='submit'>Submit</button>
+    </div>
+           </form>}
+        </div>
   )
 }
 
-export default AddProduct
+export default AddFirm

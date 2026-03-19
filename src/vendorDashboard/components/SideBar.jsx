@@ -5,49 +5,31 @@ const SideBar = ({
   showProductHandler,
   showAllProductsHandler,
   showUserDetailsHandler,
+  showAnalyticsHandler,
   showFirmTitle,
   activeView
 }) => {
+  const item = (view, icon, label, handler) => (
+    <li onClick={handler} className={activeView === view ? 'active' : ''}>
+      <span className="sidebar-icon">{icon}</span>
+      <span>{label}</span>
+    </li>
+  );
+
   return (
     <div className="sideBarSection">
-      <span className="sidebar-section-label">Menu</span>
+      <span className="sidebar-section-label">Restaurant</span>
       <ul>
-        {showFirmTitle && (
-          <li
-            onClick={showFirmHandler}
-            className={activeView === 'firm' ? 'active' : ''}
-          >
-            <span className="sidebar-icon">🏪</span>
-            <span>Add Firm</span>
-          </li>
-        )}
-        <li
-          onClick={showProductHandler}
-          className={activeView === 'product' ? 'active' : ''}
-        >
-          <span className="sidebar-icon">➕</span>
-          <span>Add Product</span>
-        </li>
-        <li
-          onClick={showAllProductsHandler}
-          className={activeView === 'allProducts' ? 'active' : ''}
-        >
-          <span className="sidebar-icon">📦</span>
-          <span>All Products</span>
-        </li>
+        {showFirmTitle && item('firm', '🏪', 'Add Firm', showFirmHandler)}
+        {item('product', '➕', 'Add Product', showProductHandler)}
+        {item('allProducts', '📦', 'All Products', showAllProductsHandler)}
+        {item('analytics', '📊', 'Analytics', showAnalyticsHandler)}
       </ul>
 
       <div className="sidebar-divider" />
       <span className="sidebar-section-label">Account</span>
-
       <ul>
-        <li
-          onClick={showUserDetailsHandler}
-          className={activeView === 'userDetails' ? 'active' : ''}
-        >
-          <span className="sidebar-icon">👤</span>
-          <span>User Details</span>
-        </li>
+        {item('userDetails', '👤', 'User Details', showUserDetailsHandler)}
       </ul>
     </div>
   );

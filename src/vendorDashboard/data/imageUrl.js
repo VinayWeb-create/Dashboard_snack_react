@@ -1,39 +1,55 @@
 // src/vendorDashboard/data/imageUrl.js
 //
-// Resolves image URLs for BOTH firm images and product images.
-// Handles all formats that may exist in the database:
+// Handles every image format that may exist in MongoDB:
 //
-//  1. Full Cloudinary URL  →  "https://res.cloudinary.com/..."
-//  2. Local /uploads/ path →  "/uploads/filename.png"
-//  3. Bare filename        →  "jsuc5lhl5hegx81kiw2b.png"  (old broken saves)
+//  FORMAT 1: Full Cloudinary URL  → "https://res.cloudinary.com/dctmlindk/image/upload/suby-products/abc.jpg"
+//  FORMAT 2: Local /uploads/ path → "/uploads/1773999022764.jpg"
+//  FORMAT 3: Bare timestamp name  → "1773999022764.jpg"   ← broken old saves (never on Cloudinary)
+//  FORMAT 4: Bare Cloudinary ID   → "suby-products/abc"   ← rare edge case
+//
+// For FORMAT 3 (bare timestamp filenames) we cannot recover the image because
+// it was saved to Render's ephemeral disk which is now wiped — show placeholder.
 
 import { API_URL } from './apiPath';
 
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '';
+const CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '';
+
+const isTimestampFilename = (str) => {
+  // Matches patterns like "1773999022764.jpg" — just digits + extension, no slashes
+  return /^\d{10,}[.\-]\w+(\.\w+)?$/.test(str) || /^\d{10,}-\d+\.\w+$/.test(str);
+};
 
 /**
- * @param {string|null} image   - The image field from MongoDB
- * @param {string} folder       - Cloudinary folder: "suby-products" or "suby-firms"
- * @returns {string|null}
+ * Resolves an image field from MongoDB to a usable URL.
+ * @param {string|null} image  - raw value from DB
+ * @param {string} folder      - "suby-products" or "suby-firms"
+ * @returns {string|null}      - full URL or null (show placeholder)
  */
 export const resolveImageUrl = (image, folder = 'suby-products') => {
   if (!image) return null;
 
-  // 1. Already a full URL
+  // FORMAT 1: already a full URL
   if (image.startsWith('http://') || image.startsWith('https://')) return image;
 
-  // 2. Local /uploads/ path (dev fallback)
+  // FORMAT 2: local /uploads/ path
   if (image.startsWith('/uploads/')) return `${API_URL}${image}`;
 
-  // 3. Bare filename — build Cloudinary URL
-  if (CLOUDINARY_CLOUD_NAME) {
-    return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${folder}/${image}`;
+  // FORMAT 3: bare timestamp filename → was on local disk, now gone → return null
+  if (isTimestampFilename(image)) return null;
+
+  // FORMAT 4: bare Cloudinary public ID like "suby-products/abc123"
+  if (CLOUD && image.includes('/')) {
+    return `https://res.cloudinary.com/${CLOUD}/image/upload/${image}`;
   }
 
-  // 4. Last resort — try local server
+  // FORMAT 5: bare filename with no folder — try Cloudinary folder
+  if (CLOUD) {
+    return `https://res.cloudinary.com/${CLOUD}/image/upload/${folder}/${image}`;
+  }
+
+  // Last resort: try local server
   return `${API_URL}/uploads/${image}`;
 };
 
-// Shorthand helpers
 export const getProductImageUrl = (image) => resolveImageUrl(image, 'suby-products');
 export const getFirmImageUrl    = (image) => resolveImageUrl(image, 'suby-firms');

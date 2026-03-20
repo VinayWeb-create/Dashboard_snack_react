@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 
 // ── PASTE YOUR CLOUDINARY VIDEO URL HERE ──────────────────────────────────────
-const VIDEO_SRC = 'https://res.cloudinary.com/dctmlindk/video/upload/your-video.mp4';
+const VIDEO_SRC = 'https://res.cloudinary.com/dctmlindk/video/upload/v1774022455/Food_Delivery_Experience_Video_Generation_q00li9.mp4';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const VideoPanel = () => {

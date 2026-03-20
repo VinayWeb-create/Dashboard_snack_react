@@ -2,14 +2,16 @@ import React, { useState } from 'react'
 import { API_URL } from '../../data/apiPath';
 import { ThreeCircles } from 'react-loader-spinner';
 import { useToast } from '../Toast';
+import { getProductImageUrl } from '../../data/imageUrl';
 
-const AddFirm = () => {
+const AddFirm = ({ onFirmAdded }) => {
   const [firmName, setFirmName] = useState("");
   const [area, setArea] = useState("");
   const [category, setCategory] = useState([]);
   const [region, setRegion] = useState([]);
   const [offer, setOffer] = useState("");
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const toast = useToast();
@@ -19,6 +21,16 @@ const AddFirm = () => {
   };
   const handleRegionChange = (value) => {
     setRegion(prev => prev.includes(value) ? prev.filter(i => i !== value) : [...prev, value]);
+  };
+
+  const handleFileChange = (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    setFile(f);
+    // Show local preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result);
+    reader.readAsDataURL(f);
   };
 
   const validate = () => {
@@ -38,6 +50,7 @@ const AddFirm = () => {
     try {
       const loginToken = localStorage.getItem('loginToken');
       if (!loginToken) { toast.error('Not authenticated. Please login.'); setLoading(false); return; }
+
       const formData = new FormData();
       formData.append('firmName', firmName);
       formData.append('area', area);
@@ -49,33 +62,37 @@ const AddFirm = () => {
       const response = await fetch(`${API_URL}/firm/add-firm`, {
         method: 'POST',
         headers: { 'token': loginToken },
-        body: formData
+        body: formData,
       });
       const data = await response.json();
+
       if (response.ok) {
         localStorage.setItem('firmId', data.firmId);
         localStorage.setItem('firmName', data.vendorFirmName);
         toast.success('Firm added successfully! 🏪');
-        setFirmName(""); setArea(""); setCategory([]); setRegion([]); setOffer(""); setFile(null);
-        setTimeout(() => window.location.reload(), 1500);
-      } else if (data.message === "vendor can have only one firm") {
-        toast.warning('You already have a firm. Only 1 firm allowed per vendor.');
+        setFirmName(""); setArea(""); setCategory([]); setRegion([]);
+        setOffer(""); setFile(null); setPreview(null);
+        // Notify parent so sidebar updates without full reload
+        if (onFirmAdded) onFirmAdded(data);
+        else setTimeout(() => window.location.reload(), 1200);
+      } else if (data.message === 'Vendor can have only one firm') {
+        toast.warning('You already have a firm. Only 1 firm per vendor allowed.');
       } else {
-        toast.error('Failed to add firm');
+        toast.error(data.message || 'Failed to add firm');
       }
-    } catch {
-      toast.error('Failed to add firm');
+    } catch (err) {
+      toast.error('Failed to add firm: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const catOptions = [{ v: 'veg', l: '🥦 Veg' }, { v: 'non-veg', l: '🍗 Non-Veg' }];
+  const catOptions    = [{ v: 'veg', l: '🥦 Veg' }, { v: 'non-veg', l: '🍗 Non-Veg' }];
   const regionOptions = [
     { v: 'south-indian', l: '🍛 South Indian' },
     { v: 'north-indian', l: '🫓 North Indian' },
-    { v: 'chinese', l: '🥢 Chinese' },
-    { v: 'bakery', l: '🥐 Bakery' },
+    { v: 'chinese',      l: '🥢 Chinese' },
+    { v: 'bakery',       l: '🥐 Bakery' },
   ];
 
   const pillStyle = (selected, color = 'var(--accent)') => ({
@@ -93,7 +110,6 @@ const AddFirm = () => {
     borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
     fontSize: '0.9rem', fontFamily: 'DM Sans, sans-serif',
     padding: '0 14px', outline: 'none', transition: '0.2s', boxSizing: 'border-box',
-    marginBottom: 0,
   });
 
   const lbl = {
@@ -103,7 +119,7 @@ const AddFirm = () => {
   };
 
   const onFocus = e => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px var(--accent-subtle)'; };
-  const onBlur = e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; };
+  const onBlur  = e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; };
 
   return (
     <div className="firmSection" style={{ animation: 'fadeUp 0.4s ease both' }}>
@@ -120,11 +136,9 @@ const AddFirm = () => {
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>Set up your restaurant profile</p>
           </div>
+
           <form onSubmit={handleFirmSubmit}
-            style={{
-              background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-lg)', padding: '28px',
-            }}>
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '28px' }}>
 
             <label style={lbl}>Firm Name *</label>
             <input style={inpStyle(errors.firmName)} type="text" value={firmName}
@@ -172,8 +186,17 @@ const AddFirm = () => {
 
             <label style={lbl}>Firm Image (optional)</label>
             <input type="file" accept="image/*"
-              onChange={e => setFile(e.target.files[0])}
+              onChange={handleFileChange}
               style={{ ...inpStyle(false), height: 'auto', padding: '10px 14px', color: 'var(--text-secondary)', fontSize: '0.82rem', cursor: 'pointer' }} />
+
+            {/* Image preview */}
+            {preview && (
+              <div style={{ marginTop: 10 }}>
+                <img src={preview} alt="preview"
+                  style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border)' }} />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 10 }}>Preview</span>
+              </div>
+            )}
 
             <button type="submit" style={{
               marginTop: 24, width: '100%', padding: '12px',

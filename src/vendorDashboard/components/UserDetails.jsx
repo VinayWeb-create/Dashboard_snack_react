@@ -3,9 +3,9 @@ import { API_URL } from "../data/apiPath";
 import { getProductImageUrl, getFirmImageUrl } from "../data/imageUrl";
 import { useToast } from "./Toast";
 
-/* ─────────────────────────────────────────
+/* ══════════════════════════════════════════════
    EDIT FIRM MODAL
-───────────────────────────────────────── */
+══════════════════════════════════════════════ */
 const EditFirmModal = ({ firm, onClose, onSaved }) => {
   const toast = useToast();
   const [firmName,  setFirmName]  = useState(firm.firmName  || "");
@@ -53,60 +53,61 @@ const EditFirmModal = ({ firm, onClose, onSaved }) => {
       region.forEach(r   => formData.append("region",   r));
       if (imageFile) formData.append("image", imageFile);
 
-      const res = await fetch(`${API_URL}/firm/update-firm/${firm._id}`, {
-        method: "PUT",
+      const res  = await fetch(`${API_URL}/firm/update-firm/${firm._id}`, {
+        method:  "PUT",
         headers: { token },
-        body: formData,
+        body:    formData,
       });
       const data = await res.json();
+
       if (res.ok) {
-        // Keep localStorage in sync
         localStorage.setItem("firmName", data.vendorFirmName || firmName);
         toast.success("Firm updated successfully! 🏪");
         onSaved(data.firm);
         onClose();
       } else {
-        toast.error(data.message || "Failed to update firm");
+        toast.error(data.message || `Error ${res.status}`);
       }
     } catch (err) {
-      toast.error("Failed to update firm: " + err.message);
+      toast.error("Network error: " + err.message);
     } finally {
       setSaving(false);
     }
   };
 
-  /* ── styles ── */
+  // Styles
   const overlay = {
     position: "fixed", inset: 0, zIndex: 9999,
-    background: "rgba(0,0,0,0.78)", backdropFilter: "blur(10px)",
+    background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)",
     display: "flex", alignItems: "center", justifyContent: "center",
     padding: 20, animation: "fadeIn 0.15s ease both",
   };
   const modal = {
     background: "#111114", border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 22, padding: "28px", width: "100%", maxWidth: 500,
+    borderRadius: 22, padding: 28, width: "100%", maxWidth: 500,
     maxHeight: "90vh", overflowY: "auto",
-    boxShadow: "0 32px 80px rgba(0,0,0,0.85)",
+    boxShadow: "0 32px 80px rgba(0,0,0,0.9)",
     animation: "popIn 0.25s cubic-bezier(0.34,1.56,0.64,1) both",
   };
   const inp = (err) => ({
     width: "100%", height: 44, boxSizing: "border-box",
-    background: err ? "rgba(239,68,68,0.06)" : "#1f1f26",
-    border: `1px solid ${err ? "#ef4444" : "rgba(255,255,255,0.07)"}`,
+    background: err ? "rgba(239,68,68,0.07)" : "#1f1f26",
+    border: `1px solid ${err ? "#ef4444" : "rgba(255,255,255,0.08)"}`,
     borderRadius: 9, color: "#f0f0f2",
     fontSize: "0.9rem", fontFamily: "DM Sans, sans-serif",
     padding: "0 14px", outline: "none", transition: "0.2s",
   });
   const lbl = {
-    display: "block", fontSize: "0.74rem", fontWeight: 700,
+    display: "block", fontSize: "0.73rem", fontWeight: 700,
     color: "#8b8b9a", textTransform: "uppercase",
     letterSpacing: "0.06em", marginBottom: 6, marginTop: 16,
   };
   const pill = (active, color = "#ff6b35") => ({
-    padding: "6px 14px", borderRadius: 99, fontSize: "0.82rem", fontWeight: 600,
+    padding: "6px 14px", borderRadius: 99,
+    fontSize: "0.82rem", fontWeight: 600,
     cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "0.2s",
     background: active ? `${color}22` : "#1f1f26",
-    border: `1px solid ${active ? color : "rgba(255,255,255,0.07)"}`,
+    border: `1px solid ${active ? color : "rgba(255,255,255,0.08)"}`,
     color: active ? color : "#8b8b9a",
   });
 
@@ -115,32 +116,34 @@ const EditFirmModal = ({ firm, onClose, onSaved }) => {
   return (
     <div style={overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={modal}>
+
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-          <h3 style={{ fontFamily: "Syne, sans-serif", fontSize: "1.15rem", fontWeight: 700, color: "#f0f0f2", margin: 0, letterSpacing: "-0.02em" }}>
-            Edit Firm Details
+          <h3 style={{ fontFamily: "Syne,sans-serif", fontSize: "1.15rem", fontWeight: 700, color: "#f0f0f2", margin: 0 }}>
+            Edit Firm
           </h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#8b8b9a", fontSize: "1.2rem", cursor: "pointer", padding: 4 }}>✕</button>
+          <button onClick={onClose}
+            style={{ background: "none", border: "none", color: "#8b8b9a", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
         </div>
-        <p style={{ color: "#8b8b9a", fontSize: "0.82rem", marginBottom: 6 }}>Update your restaurant information</p>
+        <p style={{ color: "#8b8b9a", fontSize: "0.82rem", marginBottom: 2 }}>Update your restaurant details</p>
 
         {/* Firm Name */}
         <label style={lbl}>Firm Name *</label>
         <input style={inp(errors.firmName)} value={firmName}
           onChange={e => { setFirmName(e.target.value); setErrors(p => ({ ...p, firmName: "" })); }}
           onFocus={e => { e.target.style.borderColor = "#ff6b35"; e.target.style.boxShadow = "0 0 0 3px rgba(255,107,53,0.15)"; }}
-          onBlur={e  => { e.target.style.borderColor = errors.firmName ? "#ef4444" : "rgba(255,255,255,0.07)"; e.target.style.boxShadow = "none"; }}
+          onBlur={e  => { e.target.style.borderColor = errors.firmName ? "#ef4444" : "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
         />
-        {errors.firmName && <span style={{ color: "#ef4444", fontSize: "0.75rem" }}>{errors.firmName}</span>}
+        {errors.firmName && <span style={{ color: "#ef4444", fontSize: "0.74rem" }}>{errors.firmName}</span>}
 
         {/* Area */}
         <label style={lbl}>Area *</label>
         <input style={inp(errors.area)} value={area}
           onChange={e => { setArea(e.target.value); setErrors(p => ({ ...p, area: "" })); }}
           onFocus={e => { e.target.style.borderColor = "#ff6b35"; e.target.style.boxShadow = "0 0 0 3px rgba(255,107,53,0.15)"; }}
-          onBlur={e  => { e.target.style.borderColor = errors.area ? "#ef4444" : "rgba(255,255,255,0.07)"; e.target.style.boxShadow = "none"; }}
+          onBlur={e  => { e.target.style.borderColor = errors.area ? "#ef4444" : "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
         />
-        {errors.area && <span style={{ color: "#ef4444", fontSize: "0.75rem" }}>{errors.area}</span>}
+        {errors.area && <span style={{ color: "#ef4444", fontSize: "0.74rem" }}>{errors.area}</span>}
 
         {/* Offer */}
         <label style={lbl}>Offer (optional)</label>
@@ -148,48 +151,58 @@ const EditFirmModal = ({ firm, onClose, onSaved }) => {
           placeholder="e.g. 20% off on orders above ₹500"
           onChange={e => setOffer(e.target.value)}
           onFocus={e => { e.target.style.borderColor = "#ff6b35"; e.target.style.boxShadow = "0 0 0 3px rgba(255,107,53,0.15)"; }}
-          onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.07)"; e.target.style.boxShadow = "none"; }}
+          onBlur={e  => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
         />
 
         {/* Category */}
         <label style={lbl}>Category *</label>
         <div style={{ display: "flex", gap: 8 }}>
-          {[["veg", "🥦 Veg"], ["non-veg", "🍗 Non-Veg"]].map(([v, l]) => (
+          {[["veg","🥦 Veg","#22c55e"], ["non-veg","🍗 Non-Veg","#ef4444"]].map(([v,l,c]) => (
             <button key={v} type="button"
               onClick={() => { toggleArr(category, setCategory, v); setErrors(p => ({ ...p, category: "" })); }}
-              style={pill(category.includes(v), v === "veg" ? "#22c55e" : "#ef4444")}>{l}</button>
+              style={pill(category.includes(v), c)}>{l}</button>
           ))}
         </div>
-        {errors.category && <span style={{ color: "#ef4444", fontSize: "0.75rem", marginTop: 4, display: "block" }}>{errors.category}</span>}
+        {errors.category && <span style={{ color: "#ef4444", fontSize: "0.74rem", marginTop: 4, display: "block" }}>{errors.category}</span>}
 
         {/* Region */}
         <label style={lbl}>Region *</label>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[["south-indian","🍛 South Indian"],["north-indian","🫓 North Indian"],["chinese","🥢 Chinese"],["bakery","🥐 Bakery"]].map(([v, l]) => (
+          {[["south-indian","🍛 South Indian"],["north-indian","🫓 North Indian"],["chinese","🥢 Chinese"],["bakery","🥐 Bakery"]].map(([v,l]) => (
             <button key={v} type="button"
               onClick={() => { toggleArr(region, setRegion, v); setErrors(p => ({ ...p, region: "" })); }}
               style={pill(region.includes(v), "#3b82f6")}>{l}</button>
           ))}
         </div>
-        {errors.region && <span style={{ color: "#ef4444", fontSize: "0.75rem", marginTop: 4, display: "block" }}>{errors.region}</span>}
+        {errors.region && <span style={{ color: "#ef4444", fontSize: "0.74rem", marginTop: 4, display: "block" }}>{errors.region}</span>}
 
         {/* Image */}
         <label style={lbl}>Firm Image</label>
 
-        {/* Current image preview */}
-        {(preview || currentImg) && (
-          <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
-            <img
-              src={preview || currentImg}
-              alt="firm"
-              onError={e => { e.target.style.display = "none"; }}
-              style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)" }}
-            />
-            <span style={{ fontSize: "0.78rem", color: "#8b8b9a" }}>
-              {preview ? "New image selected" : "Current image"}
-            </span>
-          </div>
-        )}
+        {/* Show current OR new preview */}
+        <div style={{ marginBottom: 10 }}>
+          {preview ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <img src={preview} alt="new"
+                style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)" }} />
+              <span style={{ fontSize: "0.78rem", color: "#22c55e", fontWeight: 600 }}>✓ New image ready to upload</span>
+            </div>
+          ) : currentImg ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <img src={currentImg} alt="current"
+                onError={e => { e.target.parentElement.style.display = "none"; }}
+                style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)" }} />
+              <span style={{ fontSize: "0.78rem", color: "#8b8b9a" }}>Current image</span>
+            </div>
+          ) : (
+            <div style={{
+              width: 72, height: 72, borderRadius: 12,
+              background: "rgba(255,107,53,0.08)", border: "1px dashed rgba(255,107,53,0.3)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "1.5rem",
+            }}>📷</div>
+          )}
+        </div>
 
         <input type="file" accept="image/*" onChange={handleFileChange}
           style={{ ...inp(false), height: "auto", padding: "10px 14px", color: "#8b8b9a", fontSize: "0.82rem", cursor: "pointer" }} />
@@ -197,38 +210,34 @@ const EditFirmModal = ({ firm, onClose, onSaved }) => {
         {/* Buttons */}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
           <button onClick={onClose} style={{
-            flex: 1, padding: "11px", borderRadius: 9,
+            flex: 1, padding: 11, borderRadius: 9,
             background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
             color: "#8b8b9a", fontSize: "0.87rem", fontWeight: 600,
-            cursor: "pointer", fontFamily: "DM Sans, sans-serif",
+            cursor: "pointer", fontFamily: "DM Sans,sans-serif",
           }}>Cancel</button>
           <button onClick={handleSave} disabled={saving} style={{
-            flex: 2, padding: "11px", borderRadius: 9,
-            background: "linear-gradient(135deg, #ff6b35, #ff9f1c)",
+            flex: 2, padding: 11, borderRadius: 9,
+            background: saving ? "#555" : "linear-gradient(135deg,#ff6b35,#ff9f1c)",
             border: "none", color: "white",
             fontSize: "0.88rem", fontWeight: 700,
             cursor: saving ? "not-allowed" : "pointer",
-            fontFamily: "DM Sans, sans-serif",
-            opacity: saving ? 0.7 : 1,
-            boxShadow: "0 4px 16px rgba(255,107,53,0.3)",
+            fontFamily: "DM Sans,sans-serif",
+            boxShadow: saving ? "none" : "0 4px 16px rgba(255,107,53,0.3)",
+            transition: "0.2s",
           }}>{saving ? "Saving..." : "Save Changes"}</button>
         </div>
       </div>
-
       <style>{`
-        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes popIn {
-          from { opacity:0; transform:scale(0.85) translateY(20px); }
-          to   { opacity:1; transform:scale(1)    translateY(0);    }
-        }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes popIn  { from{opacity:0;transform:scale(0.85) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
       `}</style>
     </div>
   );
 };
 
-/* ─────────────────────────────────────────
+/* ══════════════════════════════════════════════
    USER DETAILS PAGE
-───────────────────────────────────────── */
+══════════════════════════════════════════════ */
 const UserDetails = () => {
   const [vendor,      setVendor]      = useState(null);
   const [loading,     setLoading]     = useState(true);
@@ -236,29 +245,21 @@ const UserDetails = () => {
   const [editingFirm, setEditingFirm] = useState(false);
   const toast = useToast();
 
-  const fetchVendor = async () => {
+  useEffect(() => {
     const token    = localStorage.getItem("loginToken");
     const vendorId = localStorage.getItem("vendorId");
     if (!token || !vendorId) {
-      setError("No user information found. Please log in again.");
+      setError("No user info found. Please log in again.");
       setLoading(false);
       return;
     }
-    try {
-      const response = await fetch(`${API_URL}/vendor/single-vendor/${vendorId}`, {
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error("Failed to fetch user details");
-      const data = await response.json();
-      setVendor(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchVendor(); }, []);
+    fetch(`${API_URL}/vendor/single-vendor/${vendorId}`, {
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => { setVendor(data); setLoading(false); })
+      .catch(err => { setError(err.message); setLoading(false); });
+  }, []);
 
   const handleFirmSaved = (updatedFirm) => {
     setVendor(prev => ({
@@ -267,20 +268,16 @@ const UserDetails = () => {
     }));
   };
 
-  /* ── Loading ── */
   if (loading) return (
     <div className="loaderSection">
-      <div style={{ fontSize: "2rem", animation: "spin 1s linear infinite" }}>⟳</div>
+      <div style={{ fontSize: "2rem" }}>⟳</div>
       <p>Loading your details...</p>
     </div>
   );
 
-  /* ── Error ── */
   if (error) return (
     <div className="userDetailsSection">
-      <div className="user-card">
-        <p style={{ color: "var(--red)" }}>⚠️ {error}</p>
-      </div>
+      <div className="user-card"><p style={{ color: "var(--red)" }}>⚠️ {error}</p></div>
     </div>
   );
 
@@ -291,26 +288,19 @@ const UserDetails = () => {
   return (
     <div className="userDetailsSection">
 
-      {/* Edit modal */}
       {editingFirm && firm && (
-        <EditFirmModal
-          firm={firm}
-          onClose={() => setEditingFirm(false)}
-          onSaved={handleFirmSaved}
-        />
+        <EditFirmModal firm={firm} onClose={() => setEditingFirm(false)} onSaved={handleFirmSaved} />
       )}
 
-      {/* Page title */}
+      {/* Page heading */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: "1.4rem", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 4 }}>
+        <h2 style={{ fontFamily: "Syne,sans-serif", fontSize: "1.4rem", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 4 }}>
           User Details
         </h2>
-        <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-          Your account information and linked restaurant
-        </p>
+        <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Your account and restaurant info</p>
       </div>
 
-      {/* ── Account Card ── */}
+      {/* ── Account card ── */}
       <div className="user-card">
         <div className="user-avatar">{initial}</div>
         <div className="user-info-row">
@@ -325,97 +315,79 @@ const UserDetails = () => {
         </div>
       </div>
 
-      {/* ── Firm Card ── */}
+      {/* ── Firm card ── */}
       {firm ? (
         <div className="user-card" style={{ marginTop: 16 }}>
 
-          {/* Firm header: image + name + edit button */}
+          {/* Top row: image + name + edit button */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
 
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               {/* Firm image */}
               {firmImg ? (
-                <img
-                  src={firmImg}
-                  alt={firm.firmName}
-                  onError={e => { e.target.style.display = "none"; }}
-                  style={{
-                    width: 80, height: 80, objectFit: "cover",
-                    borderRadius: 16, border: "1px solid var(--border)",
-                    flexShrink: 0, boxShadow: "var(--shadow)",
-                  }}
+                <img src={firmImg} alt={firm.firmName}
+                  onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }}
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 16, border: "1px solid var(--border)", flexShrink: 0 }}
                 />
-              ) : (
-                <div style={{
-                  width: 80, height: 80, borderRadius: 16, flexShrink: 0,
-                  background: "linear-gradient(135deg, var(--accent), var(--accent2))",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "2.2rem", boxShadow: "var(--shadow-accent)",
-                }}>🏪</div>
-              )}
+              ) : null}
+              {/* Fallback emoji tile — hidden if real image loads */}
+              <div style={{
+                width: 80, height: 80, borderRadius: 16, flexShrink: 0,
+                background: "linear-gradient(135deg,var(--accent),var(--accent2))",
+                display: firmImg ? "none" : "flex",
+                alignItems: "center", justifyContent: "center",
+                fontSize: "2.2rem", boxShadow: "var(--shadow-accent)",
+              }}>🏪</div>
 
               <div>
-                <div style={{ fontFamily: "Syne, sans-serif", fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                <div style={{ fontFamily: "Syne,sans-serif", fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
                   {firm.firmName}
                 </div>
-                <div style={{ fontSize: "0.83rem", color: "var(--text-secondary)", marginTop: 3 }}>
-                  📍 {firm.area}
-                </div>
+                <div style={{ fontSize: "0.83rem", color: "var(--text-secondary)", marginTop: 3 }}>📍 {firm.area}</div>
                 {firm.offer && (
-                  <div style={{ fontSize: "0.78rem", color: "var(--accent)", fontWeight: 600, marginTop: 4 }}>
-                    🎁 {firm.offer}
-                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--accent)", fontWeight: 600, marginTop: 4 }}>🎁 {firm.offer}</div>
                 )}
               </div>
             </div>
 
             {/* Edit button */}
-            <button
-              onClick={() => setEditingFirm(true)}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "8px 16px", borderRadius: 9,
-                background: "var(--accent-subtle)",
-                border: "1px solid rgba(255,107,53,0.3)",
-                color: "var(--accent)", fontSize: "0.82rem", fontWeight: 700,
-                cursor: "pointer", fontFamily: "DM Sans, sans-serif",
-                transition: "var(--transition)", flexShrink: 0,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,107,53,0.2)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-subtle)"; e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              ✏️ Edit Firm
-            </button>
+            <button onClick={() => setEditingFirm(true)} style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "8px 16px", borderRadius: 9,
+              background: "var(--accent-subtle)", border: "1px solid rgba(255,107,53,0.3)",
+              color: "var(--accent)", fontSize: "0.82rem", fontWeight: 700,
+              cursor: "pointer", fontFamily: "DM Sans,sans-serif",
+              transition: "var(--transition)", flexShrink: 0,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,107,53,0.2)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-subtle)";  e.currentTarget.style.transform = "translateY(0)"; }}
+            >✏️ Edit Firm</button>
           </div>
 
-          {/* Firm details grid */}
+          {/* Details */}
           <div className="user-info-row">
-
-            {/* Category */}
             <div className="user-info-item">
               <span className="user-info-label">Category</span>
               <span className="user-info-value">
                 {firm.category?.length
                   ? firm.category.map(c => (
                       <span key={c} style={{
-                        fontSize: "0.75rem", fontWeight: 700, padding: "3px 10px",
+                        fontSize: "0.74rem", fontWeight: 700, padding: "3px 10px",
                         borderRadius: 99, marginRight: 5, display: "inline-block",
                         background: c === "veg" ? "var(--green-subtle)" : "var(--red-subtle)",
-                        color: c === "veg" ? "var(--green)" : "var(--red)",
+                        color:      c === "veg" ? "var(--green)"        : "var(--red)",
                       }}>{c === "veg" ? "🥦 Veg" : "🍗 Non-Veg"}</span>
                     ))
                   : <span style={{ color: "var(--text-muted)" }}>—</span>}
               </span>
             </div>
-
-            {/* Region */}
             <div className="user-info-item">
               <span className="user-info-label">Region</span>
               <span className="user-info-value" style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                 {firm.region?.length
                   ? firm.region.map(r => (
                       <span key={r} style={{
-                        fontSize: "0.75rem", fontWeight: 700, padding: "3px 10px",
+                        fontSize: "0.74rem", fontWeight: 700, padding: "3px 10px",
                         borderRadius: 99, display: "inline-block",
                         background: "var(--blue-subtle)", color: "var(--blue)",
                       }}>{r}</span>
@@ -423,30 +395,28 @@ const UserDetails = () => {
                   : <span style={{ color: "var(--text-muted)" }}>—</span>}
               </span>
             </div>
-
-            {/* Product count */}
             <div className="user-info-item">
               <span className="user-info-label">Total Products</span>
-              <span className="user-info-value" style={{ fontWeight: 700, color: "var(--accent)", fontSize: "1.05rem" }}>
+              <span className="user-info-value" style={{ fontWeight: 700, color: "var(--accent)" }}>
                 {firm.products?.length || 0}
-                <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: 400, marginLeft: 4 }}>items on menu</span>
+                <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: 400, marginLeft: 5 }}>items on menu</span>
               </span>
             </div>
           </div>
         </div>
       ) : (
-        <div className="user-card" style={{ marginTop: 16, textAlign: "center", padding: "32px" }}>
+        <div className="user-card" style={{ marginTop: 16, textAlign: "center", padding: 32 }}>
           <div style={{ fontSize: "2.5rem", marginBottom: 10 }}>🏪</div>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>No firm assigned yet.</p>
+          <p style={{ color: "var(--text-secondary)" }}>No firm assigned yet.</p>
         </div>
       )}
 
-      {/* ── Products List ── */}
+      {/* ── Products list ── */}
       {firm?.products?.length > 0 && (
         <div className="products-list-card" style={{ marginTop: 16 }}>
           <h4>Menu Items ({firm.products.length})</h4>
           <ul>
-            {firm.products.map((prod) => {
+            {firm.products.map(prod => {
               const imgUrl = getProductImageUrl(prod.image);
               return (
                 <li key={prod._id}>
@@ -482,7 +452,7 @@ const UserDetails = () => {
       )}
 
       {firm && !firm.products?.length && (
-        <div className="user-card" style={{ marginTop: 16, textAlign: "center", padding: "28px" }}>
+        <div className="user-card" style={{ marginTop: 16, textAlign: "center", padding: 28 }}>
           <div style={{ fontSize: "2rem", marginBottom: 8 }}>🍽️</div>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>No products added yet.</p>
         </div>

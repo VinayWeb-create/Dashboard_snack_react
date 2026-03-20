@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../data/apiPath';
+import { getProductImageUrl } from '../data/imageUrl';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmModal';
 
@@ -50,7 +51,8 @@ const EditModal = ({ product, onClose, onSave }) => {
         onSave(data.product || { ...product, productName, price, description, bestSeller, category });
         onClose();
       } else {
-        toast.error('Failed to update product');
+        const err = await res.json();
+        toast.error(err.error || 'Failed to update product');
       }
     } catch {
       toast.error('Failed to update product');
@@ -90,6 +92,8 @@ const EditModal = ({ product, onClose, onSave }) => {
     marginBottom: 6, marginTop: 16,
   };
 
+  const imgUrl = getProductImageUrl(product.image);
+
   return (
     <div style={overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={modal}>
@@ -100,6 +104,21 @@ const EditModal = ({ product, onClose, onSave }) => {
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#8b8b9a', fontSize: '1.2rem', cursor: 'pointer', padding: 4, lineHeight: 1 }}>✕</button>
         </div>
         <p style={{ color: '#8b8b9a', fontSize: '0.82rem', marginBottom: 4 }}>Update the details below</p>
+
+        {/* Current image preview */}
+        {imgUrl && (
+          <div style={{ marginTop: 12, marginBottom: 4 }}>
+            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#8b8b9a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              Current Image
+            </span>
+            <img
+              src={imgUrl}
+              alt="current"
+              onError={e => { e.target.style.display = 'none'; }}
+              style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}
+            />
+          </div>
+        )}
 
         <label style={lbl}>Product Name</label>
         <input style={inp(errors.productName)} value={productName}
@@ -228,13 +247,37 @@ const AllProducts = () => {
     color: active ? 'var(--accent)' : 'var(--text-secondary)',
   });
 
+  // Placeholder when image fails or is missing
+  const ImageCell = ({ image, name }) => {
+    const url = getProductImageUrl(image);
+    const [failed, setFailed] = useState(false);
+
+    if (!url || failed) {
+      return (
+        <div style={{
+          width: 44, height: 44, background: 'var(--surface3)',
+          borderRadius: 10, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '1.1rem',
+        }}>🍴</div>
+      );
+    }
+
+    return (
+      <img
+        src={url}
+        alt={name}
+        onError={() => setFailed(true)}
+        style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border)' }}
+      />
+    );
+  };
+
   return (
     <div className="productSection">
       {editProduct && (
         <EditModal product={editProduct} onClose={() => setEditProduct(null)} onSave={handleSaveEdit} />
       )}
 
-      {/* Header */}
       <div className="products-header">
         <h2>All Products</h2>
         <span className="products-count">{filtered.length} of {products.length}</span>
@@ -302,15 +345,7 @@ const AllProducts = () => {
               {filtered.map(item => (
                 <tr key={item._id}>
                   <td className="product-img-cell">
-                    {item.image ? (
-                      <img src={`${API_URL}${item.image}`} alt={item.productName} />
-                    ) : (
-                      <div style={{
-                        width: 44, height: 44, background: 'var(--surface3)',
-                        borderRadius: 10, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: '1.1rem',
-                      }}>🍴</div>
-                    )}
+                    <ImageCell image={item.image} name={item.productName} />
                   </td>
                   <td className="product-name-cell">{item.productName}</td>
                   <td>

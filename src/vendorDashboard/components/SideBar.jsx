@@ -6,6 +6,7 @@ const SideBar = ({
   showAllProductsHandler,
   showUserDetailsHandler,
   showAnalyticsHandler,
+  showChangePasswordHandler,
   showFirmTitle,
   activeView
 }) => {
@@ -27,9 +28,11 @@ const SideBar = ({
       </ul>
 
       <div className="sidebar-divider" />
+
       <span className="sidebar-section-label">Account</span>
       <ul>
         {item('userDetails', '👤', 'User Details', showUserDetailsHandler)}
+        {item('changePassword', '🔒', 'Change Password', showChangePasswordHandler)}
       </ul>
     </div>
   );

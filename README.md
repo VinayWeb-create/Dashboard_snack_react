@@ -6,7 +6,7 @@ A full-featured, dark-themed restaurant vendor management dashboard built with *
 
 ## 🌐 Live Demo
 
-> **Frontend:** Deployed on [Vercel](https://vercel.com)  
+> **Frontend:** Deployed on [Vercel](https://dashboard-snack-react.vercel.app/)  
 > **Backend API:** `https://backend-nodejs-suby-2-rts0.onrender.com`
 
 ---
